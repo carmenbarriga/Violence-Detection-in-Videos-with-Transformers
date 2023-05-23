@@ -1,11 +1,11 @@
-# Violence Detection in Videos with Transformers
+# **Violence Detection in Videos with Transformers**
 
 En este trabajo se propone analizar, experimentar y evaluar dos adaptaciones de arquitecturas *Transformer* para la detección de violencia en videos:
 
 * DeVTr [1]
 * ViViT [2] [6]
 
-El objetivo principal es explorar el potencial de estas arquitecturas en esta área específica y comprender cómo se pueden aprovechar sus capacidades para mejorar los resultados en la detección de violencia. Es por ello que se realizarán experimentos utilizando tres diferentes conjuntos de datos representativos: 
+## **Conjuntos de Datos**
 
 * [*Hockey Fight*](https://drive.google.com/drive/folders/15BC-cyDnRoZ6PILk1_JO4tiqbP90S_zU?usp=share_link): *Hockey Fight* fue presentado por Bermejo Nievas et al. [3] en el año 2011. Este conjunto de datos es uno de los más usados en la investigación de detección de violencia en videos. *Hockey Fight* tiene un total de 1000 clips de video de partidos de hockey de la Liga Nacional de Hockey (National Hockey League - NHL). Cada clip tiene una duración de 2 segundos y una tasa de frames por segundo de 25. Los videos tienen una resolución de 360x288 píxeles. De los 1000 videos, 500 están etiquetados como "Violencia" y los otros 500 como "No Violencia". Los videos no contienen audio y están disponibles en formato AVI. En la Figura 1 se muestran algunos frames de un video del conjunto de datos *Hockey Fight* perteneciente a la clase "Violencia" y en la Figura 2 de la clase "No Violencia".
 
@@ -49,11 +49,22 @@ El objetivo principal es explorar el potencial de estas arquitecturas en esta á
 
 *Figura 6: Frames de varios videos pertenecientes a la clase "No Violencia" tomados del conjunto de datos RWF-2000 [4].*
 
+## **Métricas**
 
 Se evaluará el rendimiento de las adaptaciones propuestas en términos de tres métricas: *accuracy*, *precision* y *recall*.
 
+<div align="center">
 
-## Referencias
+$accuracy = \frac{Positivos Verdaderos + Negativos Verdaderos}{Positivos Verdaderos + Negativos Verdaderos + Falsos Positivos + Falsos Negativos}$
+
+$precision = \frac{Positivos Verdaderos}{Positivos Verdaderos + Falsos Positivos}$
+
+$recall = \frac{Positivos Verdaderos}{Positivos Verdaderos + Falsos Negativos}$
+
+</div>
+
+
+## **Referencias**
 
 [1] Abdali, A. R. (2021, July). Data efficient video transformer for violence detection. In 2021 IEEE International Conference on Communication, Networks and Satellite (COMNETSAT) (pp. 195-199). IEEE.
 
