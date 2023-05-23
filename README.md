@@ -3,33 +3,33 @@
 En este trabajo se propone analizar, experimentar y evaluar dos adaptaciones de arquitecturas *Transformer* para la detección de violencia en videos:
 
 * DeVTr [1]
-* ViViT [2] [3]
+* ViViT [2] [6]
 
 El objetivo principal es explorar el potencial de estas arquitecturas en esta área específica y comprender cómo se pueden aprovechar sus capacidades para mejorar los resultados en la detección de violencia. Es por ello que se realizarán experimentos utilizando tres diferentes conjuntos de datos representativos: 
 
 * [*Hockey Fight*](https://drive.google.com/drive/folders/15BC-cyDnRoZ6PILk1_JO4tiqbP90S_zU?usp=share_link): *Hockey Fight* fue presentado por Bermejo Nievas et al. [3] en el año 2011. Este conjunto de datos es uno de los más usados en la investigación de detección de violencia en videos. *Hockey Fight* tiene un total de 1000 clips de video de partidos de hockey de la Liga Nacional de Hockey (National Hockey League - NHL). Cada clip tiene una duración de 2 segundos y una tasa de frames por segundo de 25. Los videos tienen una resolución de 360x288 píxeles. De los 1000 videos, 500 están etiquetados como "Violencia" y los otros 500 como "No Violencia". Los videos no contienen audio y están disponibles en formato AVI. En la Figura 1 se muestran algunos frames de un video del conjunto de datos *Hockey Fight* perteneciente a la clase "Violencia" y en la Figura 2 de la clase "No Violencia".
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/fi445.png" alt="Frames de un video perteneciente a la clase 'Violencia' tomados del conjunto de datos Hockey Fight" width="400">
 </div>
 
 *Figura 1: Frames de un video perteneciente a la clase "Violencia" tomados del conjunto de datos Hockey Fight [3].*
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/no500.png" alt="Frames de un video perteneciente a la clase 'No Violencia' tomados del conjunto de datos Hockey Fight" width="400">
 </div>
 
 *Figura 2: Frames de un video perteneciente a la clase "No Violencia" tomados del conjunto de datos Hockey Fight [3].*
 
-* [*Violence in Movies*](https://drive.google.com/drive/folders/1JZtTutsU-1eXAeWt8M5T9v596FJ6eKHJ?usp=share_link): El conjunto de datos *Violence in Movies* consta de videos obtenidos de películas que contienen escenas de peleas y de acción. Fue presentado por Bermejo Nievas et al. [3] junto con el conjunto de datos *Hockey Fight*. La cantidad de clips de video que contiene es de 200, número significativamente menor en comparación con otros conjuntos de datos. De los 200 videos, 100 están etiquetados como "Violencia" y los otros 100 como "No Violencia". Al igual que el conjunto de datos *Hockey Fight*, los clips de video tienen una duración de 2 segundos y la tasa de frames por segundo es de 25. En la Figura 3 se muestran algunos frames de varios videos del conjunto de datos *Violence in Movies* pertenecientes a la clase "Violencia" y en la Figura 4 de la clase "No Violencia". Mientras que el conjunto de datos *Hockey Fight* es uniforme en términos de formato y contenido, el conjunto de datos *Violence in Movies* presenta una mayor variedad de escenas capturadas en diferentes resoluciones. Además, este último tiene videos en diferentes formatos de archivo. Cabe resaltar que los clips de video correspondientes a la clase "No Violencia" fueron tomados de varios conjuntos de datos para la tarea del reconocimiento de acciones [@serrano2015fast].
+* [*Violence in Movies*](https://drive.google.com/drive/folders/1JZtTutsU-1eXAeWt8M5T9v596FJ6eKHJ?usp=share_link): El conjunto de datos *Violence in Movies* consta de videos obtenidos de películas que contienen escenas de peleas y de acción. Fue presentado por Bermejo Nievas et al. [3] junto con el conjunto de datos *Hockey Fight*. La cantidad de clips de video que contiene es de 200, número significativamente menor en comparación con otros conjuntos de datos. De los 200 videos, 100 están etiquetados como "Violencia" y los otros 100 como "No Violencia". Al igual que el conjunto de datos *Hockey Fight*, los clips de video tienen una duración de 2 segundos y la tasa de frames por segundo es de 25. En la Figura 3 se muestran algunos frames de varios videos del conjunto de datos *Violence in Movies* pertenecientes a la clase "Violencia" y en la Figura 4 de la clase "No Violencia". Mientras que el conjunto de datos *Hockey Fight* es uniforme en términos de formato y contenido, el conjunto de datos *Violence in Movies* presenta una mayor variedad de escenas capturadas en diferentes resoluciones. Además, este último tiene videos en diferentes formatos de archivo. Cabe resaltar que los clips de video correspondientes a la clase "No Violencia" fueron tomados de varios conjuntos de datos para la tarea del reconocimiento de acciones [5].
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/Violence_Movies_Violence.png" alt="Frames de varios videos pertenecientes a la clase 'Violencia' tomados del conjunto de datos Violence in Movies" width="400">
 </div>
 
 *Figura 3: Frames de varios videos pertenecientes a la clase "Violencia" tomados del conjunto de datos Violence in Movies [3].*
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/Violence_Movies_Non_Violence.png" alt="Frames de varios videos pertenecientes a la clase 'No Violencia' tomados del conjunto de datos Violence in Movies" width="400">
 </div>
 
@@ -37,13 +37,13 @@ El objetivo principal es explorar el potencial de estas arquitecturas en esta á
 
 * *RWF-2000* [4]: Este conjunto de datos fue propuesto por Cheng et al. [4] en el año 2021. El número total de clips de video es de 2000. Estos videos fueron captados por cámaras de vigilancia en ambientes del mundo real y fueron colectados de la página web de YouTube. Los videos poseen diferentes resoluciones y una duración de 5 segundos cada uno. La tasa de frames por segundo es de 30. En la Figura 5 se muestran algunos frames de varios videos del conjunto de datos RWF-2000 pertenecientes a la clase "Violencia" y en la Figura 6 de la clase "No Violencia".
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/RWF-2000_Violence.png" alt="Frames de varios videos pertenecientes a la clase 'Violencia' tomados del conjunto de datos RWF-2000" width="400">
 </div>
 
 *Figura 5: Frames de varios videos pertenecientes a la clase "Violencia" tomados del conjunto de datos RWF-2000 [4].*
 
-<div style="text-align:center">
+<div align="center">
     <img src="Images/RWF-2000_Non_Violence.png" alt="Frames de varios videos pertenecientes a la clase 'No Violencia' tomados del conjunto de datos RWF-2000" width="400">
 </div>
 
