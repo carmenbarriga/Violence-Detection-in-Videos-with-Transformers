@@ -10,13 +10,13 @@ En este trabajo se propone analizar, experimentar y evaluar dos adaptaciones de 
 * [*Hockey Fight*](https://drive.google.com/drive/folders/15BC-cyDnRoZ6PILk1_JO4tiqbP90S_zU?usp=share_link): *Hockey Fight* fue presentado por Bermejo Nievas et al. [3] en el año 2011. Este conjunto de datos es uno de los más usados en la investigación de detección de violencia en videos. *Hockey Fight* tiene un total de 1000 clips de video de partidos de hockey de la Liga Nacional de Hockey (National Hockey League - NHL). Cada clip tiene una duración de 2 segundos y una tasa de frames por segundo de 25. Los videos tienen una resolución de 360x288 píxeles. De los 1000 videos, 500 están etiquetados como "Violencia" y los otros 500 como "No Violencia". Los videos no contienen audio y están disponibles en formato AVI. En la Figura 1 se muestran algunos frames de un video del conjunto de datos *Hockey Fight* perteneciente a la clase "Violencia" y en la Figura 2 de la clase "No Violencia".
 
 <div align="center">
-    <img src="Images/fi445.png" alt="Frames de un video perteneciente a la clase 'Violencia' tomados del conjunto de datos Hockey Fight" width="400">
+    <img src="Images/Hockey_Fight_Violence.png" alt="Frames de un video perteneciente a la clase 'Violencia' tomados del conjunto de datos Hockey Fight" width="400">
 </div>
 
 *Figura 1: Frames de un video perteneciente a la clase "Violencia" tomados del conjunto de datos Hockey Fight [3].*
 
 <div align="center">
-    <img src="Images/no500.png" alt="Frames de un video perteneciente a la clase 'No Violencia' tomados del conjunto de datos Hockey Fight" width="400">
+    <img src="Images/Hockey_Fight_Non_Violence.png" alt="Frames de un video perteneciente a la clase 'No Violencia' tomados del conjunto de datos Hockey Fight" width="400">
 </div>
 
 *Figura 2: Frames de un video perteneciente a la clase "No Violencia" tomados del conjunto de datos Hockey Fight [3].*
@@ -62,7 +62,6 @@ $precision = \frac{Positivos Verdaderos}{Positivos Verdaderos + Falsos Positivos
 $recall = \frac{Positivos Verdaderos}{Positivos Verdaderos + Falsos Negativos}$
 
 </div>
-
 
 ## **Referencias**
 
