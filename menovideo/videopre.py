@@ -64,7 +64,7 @@ def capture(filename, timesep, rgb, h, w):
 
 
 class TaskDataset(Dataset):
-    def __init__(self, data, timesep = 10, rgb = 3, h = 90, w = 90):
+    def __init__(self, data, timesep=10, rgb=3, h=90, w=90):
         """
         Args:
             data: pandas dataframe that contains the paths to the video files with their labels
