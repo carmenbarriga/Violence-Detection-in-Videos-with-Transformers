@@ -30,21 +30,26 @@ class TimeWarp(nn.Module):
                 x_t = self.model(x[:, frame, :, :, :])
                 # Flatten the output
                 if self.flatn:
+                    # Keep the first dimension and automatically adjusting the other dimensions
                     x_t = x_t.view(x_t.size(0), -1)
                 output.append(x_t)
 
-            # Make output as (samples, timesteps, output_size)
+            # Make output as (samples, time_steps, output_size)
+            # Stacks the output list tensors along a new dimension at position 0
+            # and swaps the position of dimensions 0 and 1
             x = torch.stack(output, dim=0).transpose_(0, 1)
             output = None
             x_t = None
         else:
-            # reshape input  to be (batch_size * timesteps, input_size)
+            # Reshape input to be (batch_size * timesteps, input_size)
             x = x.contiguous().view(batch_size * time_steps, color_channels, height, width)
             x = self.model(x)
+            # Flatten the output
             if self.flatn:
+                # Keep the first dimension and automatically adjusting the other dimensions
                 x = x.view(x.size(0), -1)
-            #make output as  ( samples, timesteps, output_size)
-            x = x.contiguous().view(batch_size , time_steps , x.size(-1))
+            # Make output as (samples, time_steps, output_size)
+            x = x.contiguous().view(batch_size, time_steps, x.size(-1))
         return x
 
 
