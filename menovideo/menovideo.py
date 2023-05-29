@@ -54,25 +54,25 @@ class TimeWarp(nn.Module):
 
 
 class PositionalEncoder(nn.Module):
-    def __init__(self, embd_dim, dropout=0.1, time_steps=30):
+    def __init__(self, embedding_dimension, dropout=0.1, time_steps=30):
         super(PositionalEncoder, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
-        self.embd_dim = embd_dim
+        self.embedding_dimension = embedding_dimension
         self.time_steps = time_steps
 
     def do_pos_encode(self):        
-        device =  'cuda' if torch.cuda.is_available() else 'cpu'
-        pe = torch.zeros(self.time_steps, self.embd_dim).to(device)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        pe = torch.zeros(self.time_steps, self.embedding_dimension).to(device)
         for pos in range(self.time_steps):
-            for i in range(0, self.embd_dim, 2):    # tow steps loop , for each dim in embddim
-                pe[pos, i] = math.sin(pos / (10000 ** ((2 * i) / self.embd_dim)))
-                pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1)) / self.embd_dim)))
-        pe = pe.unsqueeze(0) #to make shape of (batch size , time steps ,embding_dim)
+            for i in range(0, self.embedding_dimension, 2):    # tow steps loop , for each dim in embddim
+                pe[pos, i] = math.sin(pos / (10000 ** ((2 * i) / self.embedding_dimension)))
+                pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1)) / self.embedding_dimension)))
+        pe = pe.unsqueeze(0) # to make shape of (batch size , time steps ,embding_dim)
         return pe
 
     def forward(self, x):
-        #x here is embded data must be shape of (batch , time_steps , embding_dim)
-        x = x * math.sqrt(self.embd_dim)
+        # x here is embded data must be shape of (batch , time_steps , embding_dim)
+        x = x * math.sqrt(self.embedding_dimension)
         pe = self.do_pos_encode()
         x += pe[:, :x.size(1)]   # pe will automatically be expanded with the same batch size as encoded_words
         x = self.dropout(x)
