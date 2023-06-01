@@ -121,7 +121,7 @@ def DeVTr(
     embedding_network = nn.Sequential(vgg_19_model, nn.ReLU())
 
     final_model = nn.Sequential(
-        TimeWarp(embedding_network, method='loop', flatn=False),
+        TimeWarp(embedding_network),
         PositionalEncoder(embedding_dimension=embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
         memoTransormer(embedding_dimension=embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
         nn.Flatten(),
