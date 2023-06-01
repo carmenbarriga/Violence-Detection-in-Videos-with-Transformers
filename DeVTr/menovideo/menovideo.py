@@ -45,29 +45,28 @@ class PositionalEncoder(nn.Module):
         self.embedding_dimension = embedding_dimension
         self.time_steps = time_steps
 
-    def do_pos_encode(self):
+    def do_positional_encode(self):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        pe = torch.zeros(self.time_steps, self.embedding_dimension).to(device)
+        positional_encode = torch.zeros(self.time_steps, self.embedding_dimension).to(device)
         for pos in range(self.time_steps):
             for i in range(0, self.embedding_dimension, 2):
-                pe[pos, i] = math.sin(pos / (10000 ** ((2 * i) / self.embedding_dimension)))
-                pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1)) / self.embedding_dimension)))
-        pe = pe.unsqueeze(0) # to make shape of (batch size, time steps, embding_dim)
-        return pe
+                positional_encode[pos, i] = math.sin(pos / (10000 ** ((2 * i) / self.embedding_dimension)))
+                positional_encode[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1)) / self.embedding_dimension)))
+        positional_encode = positional_encode.unsqueeze(0)
+        return positional_encode
 
     def forward(self, x):
-        # x here is embded data must be shape of (batch , time_steps , embding_dim)
         x = x * math.sqrt(self.embedding_dimension)
-        pe = self.do_pos_encode()
-        x += pe[:, :x.size(1)]   # pe will automatically be expanded with the same batch size as encoded_words
+        positional_encode = self.do_positional_encode()
+        x += positional_encode[:, :x.size(1)]
         x = self.dropout(x)
         return x
 
 
 class memoTransormer(nn.Module):
-    def __init__(self, dim, heads=8, layers=6, actv='gelu'):
+    def __init__(self, embedding_dimension, heads=8, layers=4, actv='gelu'):
         super(memoTransormer, self).__init__()
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=dim, nhead=heads, activation=actv)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=embedding_dimension, nhead=heads, activation=actv)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=layers)
 
     def forward(self, x):
@@ -123,10 +122,9 @@ def DeVTr(
 
     final_model = nn.Sequential(
         TimeWarp(embedding_network, method='loop', flatn=False),
-        PositionalEncoder(embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
-        memoTransormer(embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
+        PositionalEncoder(embedding_dimension=embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
+        memoTransormer(embedding_dimension=embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
         nn.Flatten(),
-        #20480 is frame numbers * dim
         nn.Linear(number_of_frames * embedding_dimension, number_of_neurons),
         nn.Dropout(classification_dropout_rate),
         nn.ReLU(),
