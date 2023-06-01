@@ -15,59 +15,44 @@ from torch import nn
 
 
 class TimeWarp(nn.Module):
-    def __init__(self, model, method='squeeze', flatn=True):
+    def __init__(self, model):
         super(TimeWarp, self).__init__()
         self.model = model
-        self.method = method
-        self.flatn = flatn
  
     def forward(self, x):
-        batch_size, time_steps, color_channels, height, width = x.size()
-        if self.method == 'loop':
-            output = []
-            for frame in range(time_steps):
-                # Input one frame at a time into the model
-                x_t = self.model(x[:, frame, :, :, :])
-                # Flatten the output
-                if self.flatn:
-                    # Keep the first dimension and automatically adjusting the other dimensions
-                    x_t = x_t.view(x_t.size(0), -1)
-                output.append(x_t)
+        # [batch_size, time_steps, color_channels, height, width]
+        _, time_steps, _, _, _ = x.size()
+        output = []
+        for frame in range(time_steps):
+            x_t = self.model(x[:, frame, :, :, :])
+            output.append(x_t)
 
-            # Make output as (samples, time_steps, output_size)
-            # Stacks the output list tensors along a new dimension at position 0
-            # and swaps the position of dimensions 0 and 1
-            x = torch.stack(output, dim=0).transpose_(0, 1)
-            output = None
-            x_t = None
-        else:
-            # Reshape input to be (batch_size * timesteps, input_size)
-            x = x.contiguous().view(batch_size * time_steps, color_channels, height, width)
-            x = self.model(x)
-            # Flatten the output
-            if self.flatn:
-                # Keep the first dimension and automatically adjusting the other dimensions
-                x = x.view(x.size(0), -1)
-            # Make output as (samples, time_steps, output_size)
-            x = x.contiguous().view(batch_size, time_steps, x.size(-1))
+        # Make output as (samples, time_steps, output_size)
+        # Stacks the output list tensors along a new dimension at position 0
+        # and swaps the position of dimensions 0 and 1
+        x = torch.stack(output, dim=0).transpose_(0, 1)
+
+        output = None
+        x_t = None
+
         return x
 
 
 class PositionalEncoder(nn.Module):
-    def __init__(self, embedding_dimension, dropout=0.1, time_steps=30):
+    def __init__(self, embedding_dimension, dropout=0.1, time_steps=40):
         super(PositionalEncoder, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
         self.embedding_dimension = embedding_dimension
         self.time_steps = time_steps
 
-    def do_pos_encode(self):        
+    def do_pos_encode(self):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         pe = torch.zeros(self.time_steps, self.embedding_dimension).to(device)
         for pos in range(self.time_steps):
-            for i in range(0, self.embedding_dimension, 2):    # tow steps loop , for each dim in embddim
+            for i in range(0, self.embedding_dimension, 2):
                 pe[pos, i] = math.sin(pos / (10000 ** ((2 * i) / self.embedding_dimension)))
                 pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1)) / self.embedding_dimension)))
-        pe = pe.unsqueeze(0) # to make shape of (batch size , time steps ,embding_dim)
+        pe = pe.unsqueeze(0) # to make shape of (batch size, time steps, embding_dim)
         return pe
 
     def forward(self, x):
@@ -91,116 +76,67 @@ class memoTransormer(nn.Module):
 
 
 def DeVTr(
-    weights='none',
-    embedding_layer='default',
-    classifier='default',
-    number_of_neurons=1024,
-    classification_dropout_rate=0.4,
-    number_of_output_classes=1,
-    embedding_dimension=512,
-    encoder_dropout_rate=0.1,
-    number_of_frames=40,
-    encoder_layers=4,
-    encoder_heads=8
+    weights=None,                       # The path for pre-trained DeVTr model
+    number_of_neurons=1024,             # Number of neurons of the first layer that goes after the output of the encoder
+    classification_dropout_rate=0.4,    # Dropout rate of the classification network
+    number_of_output_classes=1,         # Number of output classes (Violence or Non Violence)
+    embedding_dimension=512,            # Number of output dimensions of the CNN network
+    encoder_dropout_rate=0.1,           # Dropout rate of the transformer encoder
+    number_of_frames=40,                # Number of frames of the input video
+    encoder_layers=4,                   # Number of transformer encoder layers
+    encoder_heads=8                     # Number of transformer encoder heads per layer
 ):
-    """
-    Args:
-        weights: the path for pre-trained DeVTr model
-        embedding_layer: CNN network to be used as input embedding layer.
-        classifier: any nn.sequential network that receives the output from the transformer encoder
-        number_of_neurons: number of neurons of the first layer that goes after the output of the encoder
-        classification_dropout_rate: dropout rate of the classification network
-        number_of_output_classes: number of output classes (Violence or Non Violence)
-        embedding_dimension: number of output dimensions of the CNN network
-        encoder_dropout_rate: dropout rate of the transformer encoder
-        number_of_frames: number of frames of the input video
-        encoder_layers: number of transformer encoder layers
-        encoder_heads: number of transformer encoder heads per layer
-    """
-    # VGG-19 pre-trained network with batch normalization will be used as embedding layer
-    if embedding_layer == 'default':
-        # If the weights of the pre-trained DeVTr model are passed, default values will be used
-        if weights != 'none':
-            number_of_output_classes = 1
-            encoder_dropout_rate = 0.1
-            embedding_dimension = 512
-            encoder_layers = 4
-            encoder_heads = 8
-            number_of_frames = 40
+    # If the weights of the pre-trained DeVTr model are passed, default values will be used
+    if weights:
+        number_of_output_classes = 1
+        encoder_dropout_rate = 0.1
+        embedding_dimension = 512
+        encoder_layers = 4
+        encoder_heads = 8
+        number_of_frames = 40
 
-        # Creates the VGG-19 pre-trained network with batch normalization
-        # The model is used to extract features of dimension 'embedding_dimension'
-        vgg_19_model = timm.create_model('vgg19_bn.tv_in1k', pretrained=True, num_classes=embedding_dimension)
+    # Creates the VGG-19 pre-trained network with batch normalization
+    # The model is used to extract features of dimension 'embedding_dimension'
+    vgg_19_model = timm.create_model('vgg19_bn.tv_in1k', pretrained=True, num_classes=embedding_dimension)
 
-        # To freeze the first 40 layers of the model
-        # This is because the initial layers usually contain more general and reusable
-        # features that can be useful in various computer vision tasks
-        # It seems that there are 53 layers
-        i = 0
-        for child in vgg_19_model.features.children():
-            # To disable the calculation of gradients and freezes the layer parameters,
-            # which means they will not be updated during training
-            if i < 40:
-                for param in child.parameters():
-                    param.requires_grad = False
-            # Enables the calculation of gradients and allows the parameters of these layers
-            # to be updated during training
-            else:
-                for param in child.parameters():
-                    param.requires_grad = True
-            i += 1
-
-        # Combines the VGG-19 network with a non-linear activation layer
-        # ReLU(x) = max(0, x)
-        embedding_network = nn.Sequential(vgg_19_model, nn.ReLU())
-
-        final_model = nn.Sequential(
-            TimeWarp(embedding_network, method='loop', flatn=False),
-            PositionalEncoder(embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
-            memoTransormer(embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
-            nn.Flatten(),
-            #20480 is frame numbers * dim
-            nn.Linear(number_of_frames * embedding_dimension, 1024),
-            nn.Dropout(0.4),
-            nn.ReLU(),
-            nn.Linear(1024, number_of_output_classes),
-        )
-
-        if weights != 'none':
-            if torch.cuda.is_available():
-                final_model.load_state_dict(torch.load(weights))
-            else:
-                final_model.load_state_dict(torch.load(weights, map_location ='cpu'))
-    # Another network will be used as embedding layer
-    else:
-        # Combines the network passed in the 'embedding_layer' parameter with a non-linear activation layer
-        embedding_network = nn.Sequential(embedding_layer, nn.ReLU())
-
-        # If a classification network is passed through the 'classifier' parameter
-        if classifier != 'default':
-            final_model = nn.Sequential(
-                TimeWarp(embedding_network, method='loop', flatn=False),
-                PositionalEncoder(embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
-                memoTransormer(embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
-                nn.Flatten(),
-                #20480 is frame numbers * dim
-                nn.Linear(number_of_frames * embedding_dimension, number_of_neurons),
-                nn.Dropout(classification_dropout_rate),
-                nn.ReLU(),
-                classifier,
-            )
-        # The default classification network will be used
+    # To freeze the first 40 layers of the model
+    # This is because the initial layers usually contain more general and reusable
+    # features that can be useful in various computer vision tasks
+    # It seems that there are 53 layers
+    i = 0
+    for child in vgg_19_model.features.children():
+        # To disable the calculation of gradients and freezes the layer parameters,
+        # which means they will not be updated during training
+        if i < 40:
+            for param in child.parameters():
+                param.requires_grad = False
+        # Enables the calculation of gradients and allows the parameters of these layers
+        # to be updated during training
         else:
-            final_model = nn.Sequential(
-                TimeWarp(embedding_network, method='loop', flatn=False),
-                PositionalEncoder(embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
-                memoTransormer(embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
-                nn.Flatten(),
-                #20480 is frame numbers * dim
-                nn.Linear(number_of_frames * embedding_dimension, number_of_neurons),
-                nn.Dropout(classification_dropout_rate),
-                nn.ReLU(),
-                nn.Linear(number_of_neurons, number_of_output_classes),
-            )
+            for param in child.parameters():
+                param.requires_grad = True
+        i += 1
+
+    # Combines the VGG-19 network with a non-linear activation layer
+    # ReLU(x) = max(0, x)
+    embedding_network = nn.Sequential(vgg_19_model, nn.ReLU())
+
+    final_model = nn.Sequential(
+        TimeWarp(embedding_network, method='loop', flatn=False),
+        PositionalEncoder(embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
+        memoTransormer(embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
+        nn.Flatten(),
+        #20480 is frame numbers * dim
+        nn.Linear(number_of_frames * embedding_dimension, number_of_neurons),
+        nn.Dropout(classification_dropout_rate),
+        nn.ReLU(),
+        nn.Linear(number_of_neurons, number_of_output_classes),
+    )
+
+    if weights != 'none':
+        if torch.cuda.is_available():
+            final_model.load_state_dict(torch.load(weights))
+        else:
+            final_model.load_state_dict(torch.load(weights, map_location ='cpu'))
 
     return final_model
