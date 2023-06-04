@@ -27,7 +27,6 @@ class TimeWarp(nn.Module):
             x_t = self.model(x[:, frame, :, :, :])
             output.append(x_t)
 
-        # Make output as (samples, time_steps, output_size)
         # Stacks the output list tensors along a new dimension at position 0
         # and swaps the position of dimensions 0 and 1
         x = torch.stack(output, dim=0).transpose_(0, 1)
@@ -131,7 +130,7 @@ def DeVTr(
         nn.Linear(number_of_neurons, number_of_output_classes),
     )
 
-    if weights != 'none':
+    if weights:
         if torch.cuda.is_available():
             final_model.load_state_dict(torch.load(weights))
         else:
