@@ -20,15 +20,12 @@ class TimeWarp(nn.Module):
         self.model = model
  
     def forward(self, x):
-        # [batch_size, time_steps, color_channels, height, width]
         _, time_steps, _, _, _ = x.size()
         output = []
         for frame in range(time_steps):
             x_t = self.model(x[:, frame, :, :, :])
             output.append(x_t)
 
-        # Stacks the output list tensors along a new dimension at position 0
-        # and swaps the position of dimensions 0 and 1
         x = torch.stack(output, dim=0).transpose_(0, 1)
 
         output = None
@@ -62,9 +59,9 @@ class PositionalEncoder(nn.Module):
         return x
 
 
-class memoTransormer(nn.Module):
+class memoTransformer(nn.Module):
     def __init__(self, embedding_dimension, heads=8, layers=4, actv='gelu'):
-        super(memoTransormer, self).__init__()
+        super(memoTransformer, self).__init__()
         self.encoder_layer = nn.TransformerEncoderLayer(d_model=embedding_dimension, nhead=heads, activation=actv)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=layers)
 
@@ -122,7 +119,7 @@ def DeVTr(
     final_model = nn.Sequential(
         TimeWarp(embedding_network),
         PositionalEncoder(embedding_dimension=embedding_dimension, dropout=encoder_dropout_rate, time_steps=number_of_frames),
-        memoTransormer(embedding_dimension=embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
+        memoTransformer(embedding_dimension=embedding_dimension, heads=encoder_heads, layers=encoder_layers, actv='gelu'),
         nn.Flatten(),
         nn.Linear(number_of_frames * embedding_dimension, number_of_neurons),
         nn.Dropout(classification_dropout_rate),
