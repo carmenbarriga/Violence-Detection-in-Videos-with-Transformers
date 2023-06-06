@@ -179,17 +179,3 @@ class ViViT(nn.Module):
         x = self.to_latent(x)
 
         return self.mlp_head(x)
-
-
-if __name__ == "__main__":
-
-    img = torch.ones([1, 3, 16, 224, 224]).cuda()
-
-    model = ViViT(224, 224, 16, 8, 8, 8, 2).cuda()
-    parameters = filter(lambda p: p.requires_grad, model.parameters())
-    parameters = sum([np.prod(p.size()) for p in parameters]) / 1_000_000
-    print('Trainable Parameters: %.3fM' % parameters)
-
-    out = model(img)
-
-    print("Shape of out :", out.shape)
