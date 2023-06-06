@@ -37,7 +37,8 @@ class Attention(nn.Module):
 
     def forward(self, x):
         qkv = self.to_qkv(x).chunk(3, dim=-1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)
+        q, k, v = map(lambda t: rearrange(
+            t, 'b n (h d) -> b h n d', h=self.heads), qkv)
 
         dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
 
@@ -71,8 +72,10 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(layers):
             self.layers.append(nn.ModuleList([
-                PreNorm(dimension, Attention(dimension, heads=heads, head_dimension=head_dimension, dropout=dropout)),
-                PreNorm(dimension, FeedForward(dimension, mlp_dimension, dropout=dropout))
+                PreNorm(dimension, Attention(dimension, heads=heads,
+                        head_dimension=head_dimension, dropout=dropout)),
+                PreNorm(dimension, FeedForward(
+                    dimension, mlp_dimension, dropout=dropout))
             ]))
 
     def forward(self, x):
@@ -105,27 +108,32 @@ class ViViT(nn.Module):
 
         assert height % patch_height == 0 and width % patch_width == 0, 'Image dimensions must be divisible by the patch size'
         assert frames % patch_frame == 0, 'Frames must be divisible by frame patch size'
-        
-        number_image_patches = (height // patch_height) * (width // patch_width)
+
+        number_image_patches = (height // patch_height) * \
+            (width // patch_width)
         number_frame_patches = (frames // patch_frame)
 
         patch_dimension = in_channels * patch_height * patch_width * patch_frame
-        
+
         self.patch_embedding = nn.Sequential(
-            Rearrange('b c (f pf) (h p1) (w p2) -> b f (h w) (p1 p2 pf c)', p1=patch_height, p2=patch_width, pf=patch_frame),
+            Rearrange('b c (f pf) (h p1) (w p2) -> b f (h w) (p1 p2 pf c)',
+                      p1=patch_height, p2=patch_width, pf=patch_frame),
             nn.LayerNorm(patch_dimension),
             nn.Linear(patch_dimension, dimension),
             nn.LayerNorm(dimension)
         )
 
-        self.pos_embedding = nn.Parameter(torch.randn(1, number_frame_patches, number_image_patches, dimension))
+        self.pos_embedding = nn.Parameter(torch.randn(
+            1, number_frame_patches, number_image_patches, dimension))
         self.dropout = nn.Dropout(embedding_dropout)
-        
+
         self.spatial_cls_token = nn.Parameter(torch.randn(1, 1, dimension))
-        self.spatial_transformer = Transformer(dimension, layers, heads, head_dimension, mlp_dimension, dropout)
+        self.spatial_transformer = Transformer(
+            dimension, layers, heads, head_dimension, mlp_dimension, dropout)
 
         self.temporal_cls_token = nn.Parameter(torch.randn(1, 1, dimension))
-        self.temporal_transformer = Transformer(dimension, layers, heads, head_dimension, mlp_dimension, dropout)
+        self.temporal_transformer = Transformer(
+            dimension, layers, heads, head_dimension, mlp_dimension, dropout)
 
         self.to_latent = nn.Identity()
 
@@ -140,8 +148,9 @@ class ViViT(nn.Module):
 
         x = x + self.pos_embedding[:, :f, :n]
 
-        spatial_cls_tokens = repeat(self.spatial_cls_token, '1 1 d -> b f 1 d', b=b, f=f)
-        x = torch.cat((spatial_cls_tokens, x), dim = 2)
+        spatial_cls_tokens = repeat(
+            self.spatial_cls_token, '1 1 d -> b f 1 d', b=b, f=f)
+        x = torch.cat((spatial_cls_tokens, x), dim=2)
 
         x = self.dropout(x)
 
@@ -151,7 +160,8 @@ class ViViT(nn.Module):
         x = rearrange(x, '(b f) n d -> b f n d', b=b)
         x = x[:, :, 0]
 
-        temporal_cls_tokens = repeat(self.temporal_cls_token, '1 1 d-> b 1 d', b=b)
+        temporal_cls_tokens = repeat(
+            self.temporal_cls_token, '1 1 d-> b 1 d', b=b)
         x = torch.cat((temporal_cls_tokens, x), dim=1)
 
         x = self.temporal_transformer(x)
@@ -163,14 +173,14 @@ class ViViT(nn.Module):
 
 
 if __name__ == "__main__":
-    
+
     img = torch.ones([1, 3, 16, 224, 224]).cuda()
-    
+
     model = ViViT(224, 224, 16, 8, 8, 8, 2).cuda()
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     parameters = sum([np.prod(p.size()) for p in parameters]) / 1_000_000
     print('Trainable Parameters: %.3fM' % parameters)
-    
+
     out = model(img)
-    
+
     print("Shape of out :", out.shape)
