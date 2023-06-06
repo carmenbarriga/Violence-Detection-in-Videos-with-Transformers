@@ -1,3 +1,12 @@
+"""
+Part of the code adapted from:
+ViViT,
+https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vivit.py
+
+MIT License
+Copyright (c) 2020
+"""
+
 import torch
 import numpy as np
 
