@@ -8,7 +8,6 @@ Copyright (c) 2020
 """
 
 import torch
-import numpy as np
 
 from torch import nn
 from einops import rearrange, repeat
